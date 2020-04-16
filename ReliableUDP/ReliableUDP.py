@@ -12,7 +12,7 @@ class DataPacket:
         self.data = data
         
     def prep_packet(self):
-        return str(len(str(self.seq_nums)))+str(self.seq_nums) + str(len(str(self.data))) + str(self.data)
+        return str(len(str(self.seq_nums)))+str(self.seq_nums) + str(self.data)
         
 
 class InfoPacket:
