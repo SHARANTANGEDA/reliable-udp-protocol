@@ -1,0 +1,16 @@
+Username: admin
+Password: 69791928
+Device address: 192.168.0.1
+
+PPPoE: 
+Username: saisarantangeda@gmail.com
+Password: mf22rl
+Service name: Act Fibernet
+
+Wi-Fi 2.4 GHz: 
+Network name: Shriya
+Password: 69791928
+
+Wi-Fi 5 GHz: 
+Network name: Shriya
+Password: 69791928

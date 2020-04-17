@@ -28,7 +28,7 @@ def accept_server_file(sock, sock_name, file_name):
 	data = secure_receive(sock_name, sock, BUFFER_SIZE)
 	file_name, size, expected_packets = data.split('@')
 	dir_path = os.path.dirname(os.path.realpath(__file__))
-	file_dir_path = os.path.join(dir_path, 'files', 'client_' + sock.getsockname())
+	file_dir_path = os.path.join(dir_path, 'files', 'client_' + sock.getsockname()[0])
 	try:
 		os.makedirs(file_dir_path, exist_ok=True)
 		print("Directory created successfully")

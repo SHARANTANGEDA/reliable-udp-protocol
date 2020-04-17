@@ -12,18 +12,15 @@ class DataPacket:
         self.data = data
         
     def prep_packet(self):
-        return str(len(str(self.seq_nums)))+str(self.seq_nums) + str(self.data)
+        return len(str(len(str(self.seq_nums)))+str(self.seq_nums)), str(len(str(self.seq_nums)))+str(self.seq_nums) + str(self.data)
         
 
 class InfoPacket:
-    def __init__(self,info_packet_seq_no, sequence_no, window_size):
-        self.sequence_no = sequence_no
-        self.window_size = window_size
-        self.info_packet_seq_no = info_packet_seq_no
+    def __init__(self, packet_no):
+        self.packet_no = packet_no
     
     def prep_packet(self):
-        ack_packet_size = len(str(self.info_packet_seq_no).encode('utf-8'))+len(str(len(str(self.sequence_no))).encode('utf-8'))
-        return ack_packet_size, str(self.info_packet_seq_no)+str(len(str(self.sequence_no)))+str(self.sequence_no)+str(len(str(self.window_size)))+str(self.window_size)
+        return "PACKET"+str(self.packet_no)
 
 
 class AckPacket:
