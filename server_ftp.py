@@ -78,6 +78,7 @@ class ServerThread(threading.Thread):
 	
 	def run(self):
 		print("Starting {}".format(self.address))
+		self.sock.setblocking(True)
 		choose_and_add_thread(self.sock, self.address, self.text, self.client_info)
 
 
