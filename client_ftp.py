@@ -38,8 +38,8 @@ def send_file(sock, address):
 	file_name = os.path.basename(file_path)
 	file_size = sys.getsizeof(file_path)
 	data_1 = file_name + '@' + str(file_size)
-	print('SENDING:', data_1)
-	ReliableUDPSocket().send_data(sock, data_1, address, False)
+	# print('SENDING:', data_1)
+	# ReliableUDPSocket().send_data(sock, data_1, address, False)
 	# ReliableUDPSocket().receive_data(sock, address, False)
 	file = open(file_path, 'r')
 	data = file.read()
@@ -56,10 +56,13 @@ def get_files(sock, address):
 	no_files = ReliableUDPSocket().receive_data(sock, address, False, False)
 	ReliableUDPSocket().send_data(sock, no_files, address, False)
 	files_list = []
-	for i in range(int(no_files)):
+	i = 0
+	while i < int(no_files):
 		file_name = ReliableUDPSocket().receive_data(sock, address, False, False)
-		files_list.append(file_name)
-		print((i + 1), ':', file_name)
+		if file_name not in files_list:
+			i += 1
+			files_list.append(file_name)
+			print((i + 1), ':', file_name)
 	index = int(input('Choose the index of choice to select the file: '))
 	# ReliableUDPSocket().send_data(sock, files_list[index - 1], address)
 	return files_list[index - 1]
@@ -70,10 +73,14 @@ def view_files(sock, address):
 	print(no_files, type(no_files))
 	ReliableUDPSocket().send_data(sock, no_files, address, False)
 	files_list = []
-	for i in range(int(no_files)):
+	i=0
+	while i < int(no_files):
 		file_name = ReliableUDPSocket().receive_data(sock, address, False, False)
-		files_list.append(file_name)
-		print((i + 1), ':', file_name)
+		if file_name not in files_list:
+			print((i + 1), ':', file_name)
+			i += 1
+			files_list.append(file_name)
+			
 
 
 # ReliableUDPSocket().send_data(sock, 'list received', address)
@@ -82,7 +89,7 @@ def view_files(sock, address):
 def client(host, port):
 	sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 	server_address = (host, port)
-	choices = ['send', 'receive', 'browse']
+	choices = ['send', 'browse']  # , 'receive'
 	for idx, item in enumerate(choices):
 		print((idx + 1), ":", item, 'files')
 	index = int(input('Choose the index of choice to run the FTP: '))
@@ -94,9 +101,9 @@ def client(host, port):
 		sock.sendto(str(choices[index - 1]).encode('utf-8'), server_address)
 		if choices[index - 1] == 'send':
 			send_file(sock, server_address)
-		elif choices[index - 1] == 'receive':
-			data = get_files(sock, server_address)
-			accept_server_file(sock, server_address, data)
+		# elif choices[index - 1] == 'receive':
+		# 	data = get_files(sock, server_address)
+		# 	accept_server_file(sock, server_address, data)
 		elif choices[index - 1] == 'browse':
 			view_files(sock, server_address)
 		print('Task completed')

@@ -14,6 +14,7 @@ TOL_LIMIT = 5
 
 def check_integrity_packet(data):
 	try:
+		print("CHECK INTEG", len(data))
 		no_packets = data[1:int(data[0]) + 1]
 		seq_digits = int(data[int(data[0]) + 1])
 		seq_num = data[int(data[0]) + 2: int(data[0]) + 2 + seq_digits]
@@ -24,6 +25,8 @@ def check_integrity_packet(data):
 		else:
 			return False, None, None, None
 	except ValueError:
+		return False, None, None, None
+	except IndexError:
 		return False, None, None, None
 
 
@@ -42,6 +45,9 @@ def secure_receive(sock_name, sock, buffer_size):
 	data, address = sock.recvfrom(buffer_size)
 	if catch_sabotage(sock_name, address, sock):
 		raise Exception('attempted sabotage, Shutting server down for manual Check!!')
+	text = data.decode('utf-8')
+	if text == 'send' or text == 'receive' or text == 'browse':
+		return ''
 	return data.decode('utf-8')
 
 
@@ -50,7 +56,7 @@ class ReliableUDPSocket:
 		self.seq_nums = []
 		self.seq_nums_avail = []
 		self.window_size = 4
-		
+	
 	def send_data(self, sock, data, address, is_server):
 		# print("*************** Prep to Send Data Wait 15 seconds for re-transmission*******************")
 		no_packets, data_chunks, self.seq_nums, self.seq_nums_avail = DataPacket(
@@ -74,11 +80,17 @@ class ReliableUDPSocket:
 					break
 				try:
 					data = secure_receive(address, sock, BUFFER_SIZE)
-					if len(data) != 0:
+					if len(data) != 0 and data.startswith('ACK'):
+						
 						start_time = datetime.now()
-						seq_num = int(data[1:int(data[0]) + 1])
+						seq_num = int(data[4:int(data[3]) + 4])
+						# seq_digits = int(data[int(data[0]) + 1])
+						# seq_num = data[int(data[0]) + 2: int(data[0]) + 2 + seq_digits]
+						print(seq_num, self.seq_nums, self.seq_nums_avail, "HERE")
+						if not self.seq_nums_avail[self.seq_nums.index(seq_num)] is True:
+							ack_sent += 1
 						self.seq_nums_avail[self.seq_nums.index(seq_num)] = True
-						ack_sent += 1
+						
 				except BlockingIOError:
 					pass
 				except OSError or socket.error:
@@ -91,6 +103,7 @@ class ReliableUDPSocket:
 				if idx == len(packet_dict):
 					break
 				if (not items) and idx < len(packet_dict):
+					print("Re-Transmitting", packet_dict[self.seq_nums[idx]])
 					sock.sendto(packet_dict[self.seq_nums[idx]], address)
 			prev_init = copy(init)
 			for idx, seq in enumerate(self.seq_nums_avail):  # Checking remaining Packets to move window
@@ -123,15 +136,20 @@ class ReliableUDPSocket:
 			# 		break
 			try:
 				data = secure_receive(address, sock, BUFFER_SIZE)
-				integrity, no_packets, seq_num, data_string = check_integrity_packet(data)
+				integrity, no_packets_t, seq_num, data_string = check_integrity_packet(data)
 				if integrity:
+					print("INTEG:", integrity, no_packets, seq_num, len(data_string))
 					seq_num = seq_num
 					ack_packet_data = AckPacket(seq_num).prep_packet()
 					sock.sendto(ack_packet_data, address)
-					no_packets = int(no_packets)
+					print("SEQ NO", no_packets_t, seq_num)
+					no_packets = int(no_packets_t)
+					if not int(seq_num) in data_buffer.keys():
+						curr_pack_no += 1
 					data_buffer[int(seq_num)] = data_string
-					curr_pack_no += 1
+					
 				else:
+					print("INTEG:", integrity, no_packets, seq_num, data_string)
 					print('Packet is corrupted, requesting re-transmission')
 			except OSError or socket.error:
 				print('Problem connecting')

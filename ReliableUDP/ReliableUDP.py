@@ -13,9 +13,13 @@ MAX_PACKET_PAYLOAD = 508
 
 
 def add_sequence_nums(sequence_nums, avail, no_packets):
+	high=0
+	if len(sequence_nums) != 0:
+		high = max(sequence_nums) + 1
 	for i in range(no_packets):
-		sequence_nums.append(i)
+		sequence_nums.append(high)
 		avail.append(False)
+		high += 1
 	return sequence_nums, avail
 
 
@@ -72,8 +76,6 @@ class DataPacket:
 		self.packet_chunks = [no_packs_info + pack for pack in self.packet_chunks]
 		return no_packets, self.packet_chunks, self.seq_nums, self.seq_nums_avail
 
-	
-
 
 # def prep_packet(self):
 #     return len(str(len(str(self.seq_nums))) + str(self.seq_nums)), str(len(str(self.seq_nums))) + str(
@@ -92,6 +94,7 @@ class AckPacket:
 		self.sequence_no = sequence_no
 	
 	def prep_packet(self):
-		return str(len(str(self.sequence_no))).encode('utf-8') + str(self.sequence_no).encode('utf-8') + hashlib.md5(
+		return "ACK".encode('utf-8') + str(len(str(self.sequence_no))).encode('utf-8') + str(
+			self.sequence_no).encode('utf-8') + hashlib.md5(
 			str(len(str(self.sequence_no))).encode('utf-8') + str(self.sequence_no).encode('utf-8')).hexdigest().encode(
 			'utf-8')

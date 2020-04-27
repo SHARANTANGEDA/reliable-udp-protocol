@@ -3,17 +3,18 @@ import os
 from ReliableUDP.ReliableUDPSocketAPI import ReliableUDPSocket
 import argparse
 import threading
-
+from datetime import datetime
 BUFFER_SIZE = 1500
 FILE_BUFFER_SIZE = 600
 
 
 def accept_client_file(sock, sock_name, client_info):
 	print('Receiving file from Client')
-	data = ReliableUDPSocket().receive_data(sock, sock_name, True, False)
-	file_name, size = data.split('@')
+	# data = ReliableUDPSocket().receive_data(sock, sock_name, True, False)
+	# file_name, size = data.split('@')
+	file_name = str(datetime.now()) + '.txt'
 	dir_path = os.path.dirname(os.path.realpath(__file__))
-	file_dir_path = os.path.join(dir_path, 'files', 'server_' + sock.getsockname()[0])
+	file_dir_path = os.path.join(dir_path, 'files', 'from_client_' + sock_name[0])
 	try:
 		os.makedirs(file_dir_path, exist_ok=True)
 		print("Directory created successfully")
@@ -52,8 +53,8 @@ def get_files(sock, address, client_info):
 def choose_and_add_thread(sock, address, text, client_info):
 	if text == 'send':
 		accept_client_file(sock, address, client_info)
-	elif text == 'receive':
-		send_file(sock, address, client_info)
+	# elif text == 'receive':
+	# 	send_file(sock, address, client_info)
 	elif text == 'browse':
 		get_files(sock, address, client_info)
 	dict(client_info).pop(address)
