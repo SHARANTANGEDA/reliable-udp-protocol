@@ -68,7 +68,8 @@ class ReliableUDPSocket:
 		STATE = 0
 		while curr_packet_num < no_packets and STATE < TOL_LIMIT or (
 				len(ack_pack_list) != 0 and ack_sent < len(ack_pack_list) and STATE < TOL_LIMIT):
-			print("STAT:", curr_packet_num, no_packets, STATE, TOL_LIMIT, ack_sent, len(ack_pack_list), self.seq_nums, self.seq_nums_avail)
+			print("STAT:", curr_packet_num, no_packets, STATE, TOL_LIMIT, ack_sent, len(ack_pack_list), self.seq_nums,
+				  self.seq_nums_avail)
 			while (init + self.window_size > curr_packet_num) and (curr_packet_num < no_packets):  # Sending Data
 				packet_dict[self.seq_nums[curr_packet_num]] = data_chunks[curr_packet_num]
 				sock.sendto(data_chunks[curr_packet_num], address)
@@ -117,6 +118,8 @@ class ReliableUDPSocket:
 				STATE += 1
 			else:
 				STATE = 0
+		if ack_sent < len(ack_pack_list) and STATE >= TOL_LIMIT:
+			print("Tried Re-transmitting", STATE, "times but Could not reach client\n Try again Later!!!")
 	
 	def receive_data(self, sock, address, is_server, is_file, file_path=None):
 		# print("*************** Prep to Receive Data *******************")
@@ -176,10 +179,12 @@ class ReliableUDPSocket:
 					file.write(data)
 				data_buffer.clear()
 				file.close()
+				return 100, no_packets * MAX_PACKET_PAYLOAD
 			else:
 				total_data = ''
 				for key, data in data_buffer.items():
 					total_data += data
 				data_buffer.clear()
 				return total_data
-		return
+		if is_file:
+			return (len(data_buffer) / no_packets) * 100, len(data_buffer) * MAX_PACKET_PAYLOAD

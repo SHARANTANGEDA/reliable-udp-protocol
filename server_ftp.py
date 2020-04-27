@@ -21,7 +21,14 @@ def accept_client_file(sock, sock_name, client_info):
 	except OSError as error:
 		print("Directory can not be created")
 	file_path = os.path.join(file_dir_path, file_name)
-	ReliableUDPSocket().receive_data(sock, sock_name, True, True, file_path)
+	start_time = datetime.now()
+	transfer_percent, bytes_transferred = ReliableUDPSocket().receive_data(sock, sock_name, True, True, file_path)
+	time_taken = (datetime.now()-start_time)
+	print("% of data transferred:", transfer_percent)
+	print("Bytes of Data transferred:", bytes_transferred)
+	print("Time Required For Transfer:", time_taken.seconds)
+	print("Throughput in terms of (Bytes/sec):", bytes_transferred/time_taken.seconds)
+	
 	# ReliableUDPSocket().send_data(sock, 'File received', sock_name)
 	# print('Received File:', file_name, 'from client:', sock_name)
 
@@ -52,8 +59,12 @@ def get_files(sock, address, client_info):
 
 def choose_and_add_thread(sock, address, text, client_info):
 	if text == 'send':
-		sock.sendto(text.encode('utf-8'), address)
-		accept_client_file(sock, address, client_info)
+		try:
+			sock.sendto(text.encode('utf-8'), address)
+			accept_client_file(sock, address, client_info)
+		except socket.error:
+			print("Peer is not reachable, tried all possible ways!!, bye!!")
+		
 	# elif text == 'receive':
 	# 	send_file(sock, address, client_info)
 	elif text == 'browse':
