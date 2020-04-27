@@ -46,6 +46,8 @@ def secure_receive(sock_name, sock, buffer_size):
 	if catch_sabotage(sock_name, address, sock):
 		raise Exception('attempted sabotage, Shutting server down for manual Check!!')
 	text = data.decode('utf-8')
+	print("SECURE RECEIVED:", text)
+	
 	if text == 'send' or text == 'receive' or text == 'browse':
 		return ''
 	return data.decode('utf-8')
@@ -65,7 +67,8 @@ class ReliableUDPSocket:
 		ack_pack_list, packet_dict = [], {}
 		STATE = 0
 		while curr_packet_num < no_packets and STATE < TOL_LIMIT or (
-				len(ack_pack_list) != 0 and ack_sent < len(ack_pack_list)):
+				len(ack_pack_list) != 0 and ack_sent < len(ack_pack_list) and STATE < TOL_LIMIT):
+			print("STAT:", curr_packet_num, no_packets, STATE, TOL_LIMIT, ack_sent, len(ack_pack_list), self.seq_nums, self.seq_nums_avail)
 			while (init + self.window_size > curr_packet_num) and (curr_packet_num < no_packets):  # Sending Data
 				packet_dict[self.seq_nums[curr_packet_num]] = data_chunks[curr_packet_num]
 				sock.sendto(data_chunks[curr_packet_num], address)
@@ -82,7 +85,6 @@ class ReliableUDPSocket:
 				try:
 					data = secure_receive(address, sock, BUFFER_SIZE)
 					if len(data) != 0 and data.startswith('ACK'):
-						
 						start_time = datetime.now()
 						seq_num = int(data[4:int(data[3]) + 4])
 						# seq_digits = int(data[int(data[0]) + 1])

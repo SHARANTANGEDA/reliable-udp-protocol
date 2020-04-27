@@ -125,8 +125,6 @@ def client(host, port):
 				pass
 			except OSError or socket.error:
 				print('Packet lost, prepping retransmission')
-			print("Re-Transmitting", str(choices[index - 1]).encode('utf-8'))
-			sock.sendto(str(choices[index - 1]).encode('utf-8'), server_address)
 		if choices[index - 1] == 'send':
 			send_file(sock, server_address)
 		# elif choices[index - 1] == 'receive':
