@@ -64,7 +64,8 @@ class ReliableUDPSocket:
 		init, curr_packet_num, ack_sent = 0, 0, 0
 		ack_pack_list, packet_dict = [], {}
 		STATE = 0
-		while curr_packet_num < no_packets and STATE < TOL_LIMIT:
+		while curr_packet_num < no_packets and STATE < TOL_LIMIT or (
+				len(ack_pack_list) != 0 and ack_sent < len(ack_pack_list)):
 			while (init + self.window_size > curr_packet_num) and (curr_packet_num < no_packets):  # Sending Data
 				packet_dict[self.seq_nums[curr_packet_num]] = data_chunks[curr_packet_num]
 				sock.sendto(data_chunks[curr_packet_num], address)
@@ -90,7 +91,7 @@ class ReliableUDPSocket:
 						if not self.seq_nums_avail[self.seq_nums.index(seq_num)] is True:
 							ack_sent += 1
 						self.seq_nums_avail[self.seq_nums.index(seq_num)] = True
-						
+				
 				except BlockingIOError:
 					pass
 				except OSError or socket.error:
@@ -147,7 +148,7 @@ class ReliableUDPSocket:
 					if not int(seq_num) in data_buffer.keys():
 						curr_pack_no += 1
 					data_buffer[int(seq_num)] = data_string
-					
+				
 				else:
 					print("INTEG:", integrity, no_packets, seq_num, data_string)
 					print('Packet is corrupted, requesting re-transmission')
