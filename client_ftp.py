@@ -5,10 +5,13 @@ import tkinter as tk
 from tkinter import filedialog
 from ReliableUDP.ReliableUDPSocketAPI import ReliableUDPSocket
 import argparse
+from datetime import datetime, timedelta
 
-
-# BUFFER_SIZE = 1024
-# FILE_BUFFER_SIZE = 100
+BUFFER_SIZE = 508
+HEADERS_SIZE = 10
+ACK_SIZE = 10
+RTT = 15
+Wait_Time_For_Timeout = 10
 
 
 def accept_server_file(sock, sock_name, file_name):
@@ -73,14 +76,13 @@ def view_files(sock, address):
 	print(no_files, type(no_files))
 	ReliableUDPSocket().send_data(sock, no_files, address, False)
 	files_list = []
-	i=0
+	i = 0
 	while i < int(no_files):
 		file_name = ReliableUDPSocket().receive_data(sock, address, False, False)
 		if file_name not in files_list:
 			print((i + 1), ':', file_name)
 			i += 1
 			files_list.append(file_name)
-			
 
 
 # ReliableUDPSocket().send_data(sock, 'list received', address)
@@ -99,6 +101,32 @@ def client(host, port):
 	try:
 		sock.settimeout(10)
 		sock.sendto(str(choices[index - 1]).encode('utf-8'), server_address)
+		time_out_after = timedelta(seconds=Wait_Time_For_Timeout)
+		start_time = datetime.now()
+		sock.setblocking(False)
+		STATE = 0
+		while True:  # Waiting to receive Acknowledgement
+			if datetime.now() > start_time + time_out_after:
+				if STATE < 4:
+					start_time = datetime.now()
+					print("Re-Transmitting Handshake Request", str(choices[index - 1]).encode('utf-8'))
+					sock.sendto(str(choices[index - 1]).encode('utf-8'), server_address)
+					STATE += 1
+				else:
+					break
+			try:
+				data, address = sock.recvfrom(BUFFER_SIZE)
+				if len(data) != 0:
+					start_time = datetime.now()
+					text = data.decode('utf-8')
+					if text == choices[index - 1]:
+						break
+			except BlockingIOError:
+				pass
+			except OSError or socket.error:
+				print('Packet lost, prepping retransmission')
+			print("Re-Transmitting", str(choices[index - 1]).encode('utf-8'))
+			sock.sendto(str(choices[index - 1]).encode('utf-8'), server_address)
 		if choices[index - 1] == 'send':
 			send_file(sock, server_address)
 		# elif choices[index - 1] == 'receive':

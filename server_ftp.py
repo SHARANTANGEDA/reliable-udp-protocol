@@ -52,10 +52,12 @@ def get_files(sock, address, client_info):
 
 def choose_and_add_thread(sock, address, text, client_info):
 	if text == 'send':
+		sock.sendto(text.encode('utf-8'), address)
 		accept_client_file(sock, address, client_info)
 	# elif text == 'receive':
 	# 	send_file(sock, address, client_info)
 	elif text == 'browse':
+		sock.sendto(text.encode('utf-8'), address)
 		get_files(sock, address, client_info)
 	dict(client_info).pop(address)
 
@@ -81,6 +83,7 @@ def server(host, port):
 		print('Server is Ready!!!')
 		sock.setblocking(True)
 		data, address = sock.recvfrom(BUFFER_SIZE)
+		
 		client_info[address] = sock
 		text = data.decode('utf-8')
 		print("Launching Thread")

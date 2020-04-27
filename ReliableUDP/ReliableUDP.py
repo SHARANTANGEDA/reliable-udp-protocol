@@ -13,7 +13,7 @@ MAX_PACKET_PAYLOAD = 508
 
 
 def add_sequence_nums(sequence_nums, avail, no_packets):
-	high=0
+	high = 0
 	if len(sequence_nums) != 0:
 		high = max(sequence_nums) + 1
 	for i in range(no_packets):
